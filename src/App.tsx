@@ -2,7 +2,7 @@
 import './App.css'
 import { SceneWrapper } from './scene/SceneWrapper';
 import { useRef, useState } from "react";
-import { DefaultLoadingManager } from 'three'
+// import { DefaultLoadingManager } from 'three'
 
 export function App() {
 
@@ -27,10 +27,10 @@ export function App() {
   //   setProgress(width)
   // };
 
-  const [isReady, setIsReady] = useState(false)
-  const [progress, setProgress] = useState(10)
-  const [targetX, setTargetX] = useState(0.26)
-  const [targetY, setTargetY] = useState(0.55)
+  // const [isReady, setIsReady] = useState(false)
+  // const [progress, setProgress] = useState(10)
+  // const [targetX, setTargetX] = useState(0.26)
+  // const [targetY, setTargetY] = useState(0.55)
 
   const [file, setFile] = useState<File | null>(null)
   const fileSelector = useRef(null)
@@ -47,7 +47,7 @@ export function App() {
         <div id='container-inner'>
           <div id='canvas-container'>
             <div>
-              {file && <SceneWrapper targetX={targetX} targetY={targetY} imageFile={file} />}
+              {file && <SceneWrapper imageFile={file} />}
             </div>
           </div>
           <div className='file-selector'>
