@@ -63,6 +63,9 @@ export function SceneWrapper(props: SceneWrapperProps) {
                 setDpr(4)
                 return
             }
+            else if (dpr != 1) {
+                setDpr(1)
+            }
 
             let speedArg = msDelta / (1000 / 60) //以60帧为基准速度
             if (speedArg > 3) speedArg = 3
@@ -135,7 +138,7 @@ export function SceneWrapper(props: SceneWrapperProps) {
     }
 
     useEffect(() => {
-        console.log(Date.now(), "Wrapper Ready");
+        // console.log(Date.now(), "Wrapper Ready");
         window.screenAnimateFunction = animate
         if (!isOverride) {
             if (typeof props.targetX == "number" || typeof props.targetY == "number") setDpr(1)
@@ -148,12 +151,12 @@ export function SceneWrapper(props: SceneWrapperProps) {
         }
     })
 
-    useEffect(() => { 
+    useEffect(() => {
         isDown = false
         isOverride = false
         targetX = 0
         targetY = 0
-     }, [props.sceneData])
+    }, [props.sceneData])
 
     const [dpr, setDpr] = useState(1)
     const [assets, setAssets] = useState<AssetsBundle | null>(null)

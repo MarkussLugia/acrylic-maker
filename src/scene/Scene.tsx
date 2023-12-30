@@ -26,8 +26,8 @@ export function SceneCanvas({ children, dpr, setTargetCanvas }: SceneProps) {
         >
             {children}
             <pointLight color={0xffdfc0} intensity={54} position={[-4, 5, 2.5]} />
-            <pointLight color={0xffd8b0} intensity={60} position={[4, -2, 4]} />
-            <pointLight color={0xffdfb0} intensity={54} position={[-2, -7.5, 1.5]} />
+            <pointLight color={0xffd8c0} intensity={60} position={[4, -2, 4]} />
+            <pointLight color={0xffdfc0} intensity={54} position={[-2, -7.5, 1.5]} />
         </Canvas>
     )
 }

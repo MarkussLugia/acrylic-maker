@@ -45,10 +45,11 @@ export const cfgAcrylicTransmission = {
     distortion: 0.85,// { value: 0.0, min: 0, max: 1, step: 0.01 },
     distortionScale: 0.05,// { value: 0.3, min: 0.01, max: 1, step: 0.01 },
     temporalDistortion: 0,// { value: 0.5, min: 0, max: 1, step: 0.01 },
-    clearcoat: 1,// { value: 1, min: 0, max: 1 },
+    clearcoat: 0.1,// { value: 1, min: 0, max: 1 },
+    clearcoatRoughness: 0.07,
     envMap: mapEnvHDR,
     envMapIntensity: 0.6,
-    reflectivity: 0.9,
+    reflectivity: 0.4,
     attenuationDistance: 0.02,// { value: 0.5, min: 0, max: 10, step: 0.01 },
     attenuationColor: '#ffffff',
     color: 0xefefef,
@@ -102,22 +103,25 @@ export async function generateAssets(rawData: SceneRawData): Promise<AssetsBundl
             y / -totalSize + 0.5
         )
     }
-
+    const acrylicImage = textureLoader.load(await fileToDataURL(imageFile))
     // create print texture
     const cfgPrintPlane = {
         color: 0xffffff,
-        map: textureLoader.load(await fileToDataURL(imageFile)),
-        // specularIntensity: 0,
-        roughness: 0.2,
-        clearcoat: 1,
+        map: acrylicImage,
+        // emissive: 0xffffff,
+        // emissiveMap: acrylicImage,
+        // emissiveIntensity:0.5,
+        specularIntensity: 1,
+        reflectivity: 1,
+        roughness: 0.4,
+        clearcoat: 0.5,
         clearcoatRoughness: 0.2,
-        reflectivity: 0.5,
         opacity: 1,
         transparent: true,
         // flatShading:true,
         side: DoubleSide,
         envMap: mapEnvHDR,
-        envMapIntensity: 0.6,
+        envMapIntensity: 0.2,
         // precision: "highp",
         // dithering: true,
         toneMapped: true,
@@ -144,7 +148,7 @@ export async function generateAssets(rawData: SceneRawData): Promise<AssetsBundl
         }
     );
 
-    console.log(Date.now(), "Assets Ready");
+    // console.log(Date.now(), "Assets Ready");
     return {
         mapEnvHDR,
         mapBackground,

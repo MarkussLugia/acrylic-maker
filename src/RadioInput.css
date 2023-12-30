@@ -1,0 +1,43 @@
+.radio-input-wrapper {
+    width: 100%;
+    display: flex;
+    flex-flow: row wrap;
+    user-select: none;
+}
+
+.radio-input-wrapper.disabled{
+    opacity: 0.6;
+}
+
+.radio-input-option {
+    display: flex;
+    align-items: center;
+    margin-right: 8px;
+}
+
+.radio-input-option-button{
+    width: 15px;
+    height: 15px;
+    border-radius: 255px;
+    border: 2px solid #52616b;
+    margin-right: 4px;
+}
+.radio-input-option-button>div{
+    width: calc(100% - 4px);
+    height: calc(100% - 4px);
+    border-radius: 255px;
+    margin: 2px;
+}
+
+.radio-input-option-button.active{
+    border-color: #c9d6df;
+}
+
+.radio-input-option-button.active>div{
+    background-color: #c9d6df;
+}
+.radio-input-option-text{
+    font-size: 15px;
+    line-height: 15px;
+    translate: 0 -1px;
+}

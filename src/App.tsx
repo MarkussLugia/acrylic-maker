@@ -6,6 +6,7 @@ import { fileToDataURL, imageFileToPath, urlToReadyImage } from './scene/imageTo
 // import { DefaultLoadingManager } from 'three'
 import { saveCanvas } from './saveCanvas';
 import { SceneReadyContext } from './ReactContextBus';
+import { RadioInput } from './RadioInput';
 
 declare global {
   interface BezierDirective {
@@ -31,47 +32,26 @@ declare global {
 }
 
 const basicSize = 360
-type StrokeSize = "thin" | "small" | "medium" | "large" | "broad"
-const strokeSizeIndex = {
-  thin: 11,
-  small: 13,
-  medium: 15,
-  large: 17,
-  broad: 19,
-}
+
+const strokeOptions = [
+  { name: "更窄", value: 11 },
+  { name: "较窄", value: 13 },
+  { name: "中等", value: 15 },
+  { name: "较宽", value: 17 },
+  { name: "更宽", value: 19 },
+]
 
 let targetCanvas: HTMLCanvasElement = document.createElement("canvas")
 
+// 是，App的代码有点 呃 不好看
 export function App() {
 
-  // const manager = DefaultLoadingManager;
-  // manager.onLoad = () => {
-  //   setTimeout(() => {
-  //     setTimeout(() => {
-  //       setTargetX(0.34)
-  //       setTargetY(0.9)
-  //     }, 1600);
-  //     setTimeout(() => {
-  //       setTargetX(0.26)
-  //       setTargetY(0.55)
-  //     }, 2700);
-  //     setIsReady(true)
-  //   }, 800);
-  // };
-  // manager.onProgress = (url, itemsLoaded, itemsTotal) => {
-  //   url;
-  //   let width = 10;
-  //   width += (itemsLoaded / itemsTotal) * 90;
-  //   setProgress(width)
-  // };
+  const [strokeWidth, setStrokeWidth] = useState(15)
+  function strokeWidthChange(value: number) {
+    setStrokeWidth(value)
+    createRawData(value)
+  }
 
-  // const [isReady, setIsReady] = useState(false)
-  // const [progress, setProgress] = useState(10)
-  // const [targetX, setTargetX] = useState(0.26)
-  // const [targetY, setTargetY] = useState(0.55)
-
-  // const [strokeWidth, setStrokeWidth] = useState<StrokeSize>("medium")
-  const strokeWidth: StrokeSize = "medium"
   const [sceneData, setSceneData] = useState<SceneRawData | null>(null)
 
   // 0选取图片 1生成中 2生成完毕 
@@ -90,17 +70,16 @@ export function App() {
     //@ts-ignore
     fileSelector.current!.click()
   }
-  function createRawData() {
+  function createRawData(sWidth = strokeWidth) {
     const inputEl = fileSelector.current! as HTMLInputElement
-    console.log(Date.now(), "file loaded");
+    // console.log(Date.now(), "file loaded");
     if (inputEl.files) {
       const file = inputEl.files[0]
-      const strokeWidthTemp = strokeSizeIndex[strokeWidth]
-      imageFileToPath(file, basicSize, strokeWidthTemp).then(res => {
+      imageFileToPath(file, basicSize, sWidth).then(res => {
         setSceneData({
           bezierPath: res,
           basicSize,
-          strokeSize: strokeWidthTemp,
+          strokeSize: sWidth,
           imageFile: file
         })
       })
@@ -121,7 +100,6 @@ export function App() {
 
   function goBack() {
     setCurrentState(0)
-    createRawData()
   }
 
   return (
@@ -139,24 +117,24 @@ export function App() {
           </SceneReadyContext.Provider>
         </div>
         <div className='config-area'>
-          <input style={{ display: 'none' }} type="file" accept='image/*' ref={fileSelector} onChange={createRawData} />
+          <input style={{ display: 'none' }} type="file" accept='image/*' ref={fileSelector} onChange={() => createRawData()} />
 
           {(currentState == 0 || currentState == 1) && <div className='config-image'>
-            <div className='config-title'>预览模式</div>
-            {/* <div className='config-subtitle'>选取图片，并按需调整设置。</div>
-            <div className='config-subtitle'>就绪后，点按按钮来查看模型。</div> */}
+            <div className='config-title'>正在预览2D形状。</div>
+            <div className='config-settings-title'>描边宽度：</div>
+            <RadioInput options={strokeOptions} onChange={strokeWidthChange} defaultValue={strokeWidth} disabled={currentState != 0} />
 
           </div>}
           {(currentState == 2) && <div className='config-three'>
             <div className='config-title'>正在查看3D模型。</div>
-            <div className='config-subtitle'>想要旋转模型，请在显示区域点按并划动。</div>
+            <div className='config-subtitle'>划动显示区域以旋转模型。</div>
           </div>}
         </div>
         <div className='control-area'>
           {(currentState == 0 || currentState == 1) && <div className='control-flex'>
-            <div 
-            className={`control ${sceneData ? "nogrow" : "grow"} pick`} 
-            onClick={selectFile}
+            <div
+              className={`control ${sceneData ? "nogrow" : "grow"} pick`}
+              onClick={selectFile}
             >{sceneData ? "更换图片" : "选取图片"}</div>
             {(currentState == 0 && sceneData) && <div className='control grow generate' onClick={startProcess}>
               生成亚克力模型
@@ -171,8 +149,10 @@ export function App() {
           </div>}
         </div>
         <div className='bottom-area'>
-          <div>©2023 MarkussLugia / Siltra</div>
-          <div><a href="https://github.com/MarkussLugia/acrylic-maker" target='_blank'>GitHub</a></div>
+          <div className='copyright'><div>©2023</div><div>MarkussLugia / Siltra</div></div>
+          <a href="https://github.com/MarkussLugia/acrylic-maker" target='_blank' style={{ display: "block" }}>
+            <img src="img/github-mark-white.svg" style={{ height: "27px", margin: "2px 2px 0" }} alt="GitHub" />
+          </a>
         </div>
       </div>
     </>
@@ -215,6 +195,8 @@ function ImgPreview({ data }: { data: SceneRawData }) {
     //@ts-ignore
     const imageCanvas = imageCanvasRef.current as HTMLCanvasElement
 
+    console.log("IPDraw");
+
     fileToDataURL(imageFile).then(res => {
       urlToReadyImage(res).then(fileImage => {
         imageCanvas.width = imageCanvas.width
@@ -239,14 +221,12 @@ function ImgPreview({ data }: { data: SceneRawData }) {
           const { cp1x, cp1y, cp2x, cp2y, x, y } = direction
           pathContext.bezierCurveTo(cp1x * scaleRatio, cp1y * scaleRatio, cp2x * scaleRatio, cp2y * scaleRatio, x * scaleRatio, y * scaleRatio)
         }
-        console.log(path.length);
 
         pathContext.closePath()
         pathContext.strokeStyle = "#b0b0b0"
         pathContext.stroke()
         pathContext.fillStyle = "#989898"
         pathContext.fill()
-        // pathContext.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height)
       })
     })
   }, [data])
