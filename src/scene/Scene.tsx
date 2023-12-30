@@ -72,7 +72,7 @@ export function SceneContent({ assets, setTargetEuler, setTargetMaterialHeavy, s
                     material={texPrintDepth}
                 />
                 <mesh
-                    position={[0, 0, 0]}
+                    position={[-0.001, 0, 0]}
                     geometry={assets.geoPrintPlane}
                     material={texPrintPlane}
                 />
