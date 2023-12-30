@@ -1,7 +1,7 @@
 import { BitMatrix } from '@/modules/MiraX/src/PixelMatrix'
 import { tracePath } from '@/modules/MiraX/src/PixelTrace'
 
-export async function imageFileToPath(file: File, basicSize = 384, strokeWidth = 16) {
+export async function imageFileToPath(file: File, basicSize = 384, strokeWidth = 16): Promise<BezierPath> {
     const basicCanvas = new OffscreenCanvas(basicSize, basicSize)
 
     const fileData = await fileToDataURL(file)

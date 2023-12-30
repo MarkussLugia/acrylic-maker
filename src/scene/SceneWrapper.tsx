@@ -2,7 +2,7 @@ import { Euler, MeshPhysicalMaterial } from 'three'
 import { invalidate } from '@react-three/fiber'
 import { SceneCanvas, SceneContent } from "./Scene"
 import { useEffect, useState } from 'react'
-import { imageToThreeAssets } from './imageToAssets'
+import { generateAssets } from './generateAssets'
 
 import {
     calcEase,
@@ -10,10 +10,11 @@ import {
     calcAlignDegs
 } from "./calculations"
 
-interface RotationWrapperProps {
+interface SceneWrapperProps {
     targetX?: number,
     targetY?: number,
-    imageFile: File
+    sceneData: SceneRawData | null,
+    setTargetCanvas?: (target: HTMLCanvasElement) => void,
 }
 
 let isDown = false
@@ -26,12 +27,11 @@ let targetY = 0
 let multiplier = 0.01
 let lastAnimate = Date.now()
 
-
 let targetEuler: Euler | undefined = undefined
 let targetLightM: MeshPhysicalMaterial | undefined = undefined
 let targetHeavyM: MeshPhysicalMaterial | undefined = undefined
 
-export function SceneWrapper(props: RotationWrapperProps) {
+export function SceneWrapper(props: SceneWrapperProps) {
 
     function setTargetEuler(target: Euler) {
         targetEuler = target
@@ -41,6 +41,9 @@ export function SceneWrapper(props: RotationWrapperProps) {
     }
     function setTargetMaterialHeavy(target: MeshPhysicalMaterial) {
         targetHeavyM = target
+    }
+    function setTargetCanvas(target: HTMLCanvasElement) {
+        if (props.setTargetCanvas) props.setTargetCanvas(target)
     }
 
     function animate() {
@@ -55,7 +58,11 @@ export function SceneWrapper(props: RotationWrapperProps) {
                 isFirstFrameSet = true;
                 return;
             }
-            if (targetX == targetEuler.x && targetY == targetEuler.y) return;
+
+            if (targetX == targetEuler.x && targetY == targetEuler.y) {
+                setDpr(4)
+                return
+            }
 
             let speedArg = msDelta / (1000 / 60) //以60帧为基准速度
             if (speedArg > 3) speedArg = 3
@@ -115,19 +122,23 @@ export function SceneWrapper(props: RotationWrapperProps) {
 
             lastX = target.clientX;
             lastY = target.clientY;
+            setDpr(1)
         }
     }
 
     function dragEndHandler() {
         isDown = false;
-        setDpr(4)
-        invalidate()
+        if (targetEuler) {
+            if (targetX == targetEuler.x && targetY == targetEuler.y) setDpr(4)
+            invalidate()
+        }
     }
 
     useEffect(() => {
         console.log(Date.now(), "Wrapper Ready");
         window.screenAnimateFunction = animate
         if (!isOverride) {
+            if (typeof props.targetX == "number" || typeof props.targetY == "number") setDpr(1)
             if (typeof props.targetX == "number") {
                 targetX = props.targetX
             }
@@ -137,13 +148,31 @@ export function SceneWrapper(props: RotationWrapperProps) {
         }
     })
 
+    useEffect(() => { 
+        isDown = false
+        isOverride = false
+        targetX = 0
+        targetY = 0
+     }, [props.sceneData])
+
     const [dpr, setDpr] = useState(1)
     const [assets, setAssets] = useState<AssetsBundle | null>(null)
 
+    // 生成预加载assets 加快3D场景加载
+    if (!assets) generateAssets({
+        bezierPath: { start: [255, 255], path: [] },
+        basicSize: 8,
+        strokeSize: 8,
+        imageFile: new File([new Blob()], "img")
+    }).then(res => setAssets(res))
+
     useEffect(() => {
-        imageToThreeAssets(props.imageFile)
-            .then(res => setAssets(res))
-    }, [props.imageFile])
+        if (props.sceneData) generateAssets(props.sceneData)
+            .then(res => {
+                setAssets(res)
+                invalidate()
+            })
+    }, [props.sceneData])
 
     return <div
         style={{ width: "100%", height: "100%", touchAction: "none" }}
@@ -156,7 +185,7 @@ export function SceneWrapper(props: RotationWrapperProps) {
         onMouseUp={dragEndHandler}
         onTouchEnd={dragEndHandler}
     >
-        <SceneCanvas dpr={dpr}>
+        <SceneCanvas dpr={dpr} setTargetCanvas={setTargetCanvas}>
             {assets && <SceneContent
                 setTargetEuler={setTargetEuler}
                 setTargetMaterialLight={setTargetMaterialLight}

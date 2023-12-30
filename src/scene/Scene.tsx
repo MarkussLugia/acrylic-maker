@@ -1,28 +1,33 @@
 import { Group, Euler, Texture, MeshPhysicalMaterial } from 'three'
 import { Canvas } from '@react-three/fiber'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useContext } from 'react'
 import { MeshTransmissionMaterial, Environment } from '@react-three/drei'
+import { SceneReadyContext } from '@/ReactContextBus'
 
 interface SceneProps {
+    setTargetCanvas?: (target: HTMLCanvasElement) => void,
     children: JSX.Element | null,
     dpr?: number
 }
 
-export function SceneCanvas({ children, dpr }: SceneProps) {
-    // useEffect(() => {
-    //     console.log(Date.now(), "Canvas Ready");
-    // })
-
+export function SceneCanvas({ children, dpr, setTargetCanvas }: SceneProps) {
+    useEffect(() => {
+        // console.log(Date.now(), "Canvas Ready");
+        if (setTargetCanvas) setTargetCanvas(canvasRef.current as HTMLCanvasElement)
+    })
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     return (
         <Canvas
             dpr={dpr || 1.25}
-            camera={{ position: [0, 0, 2], fov: 35 }}
+            camera={{ position: [0, 0.01, 1.75], fov: 35 }}
             frameloop="demand"
+            gl={{ preserveDrawingBuffer: true }}
+            ref={canvasRef}
         >
             {children}
-            <pointLight color={0xfff8f0} intensity={500} position={[-8, 10, 5]} />
-            <pointLight color={0xf0edff} intensity={300} position={[8, -4, 8]} />
-            <pointLight color={0xfff8e0} intensity={400} position={[-4, -15, 3]} />
+            <pointLight color={0xffdfc0} intensity={54} position={[-4, 5, 2.5]} />
+            <pointLight color={0xffd8b0} intensity={60} position={[4, -2, 4]} />
+            <pointLight color={0xffdfb0} intensity={54} position={[-2, -7.5, 1.5]} />
         </Canvas>
     )
 }
@@ -35,6 +40,7 @@ interface SceneContentProps {
 }
 
 export function SceneContent({ assets, setTargetEuler, setTargetMaterialHeavy, setTargetMaterialLight }: SceneContentProps) {
+    const readyListener = useContext(SceneReadyContext)
     const texPrintPlane = assets.matPrintPlane
     const texPrintDepth = assets.matPrintDepth
     const rotationGroupRef = useRef<Group>(null);
@@ -53,6 +59,7 @@ export function SceneContent({ assets, setTargetEuler, setTargetMaterialHeavy, s
                 <mesh
                     renderOrder={-100}
                     geometry={assets.geoAcrylic}
+                    onUpdate={readyListener}
                 >
                     <meshPhysicalMaterial {...assets.cfgAcrylicFront} />
                 </mesh>
@@ -71,6 +78,6 @@ export function SceneContent({ assets, setTargetEuler, setTargetMaterialHeavy, s
                 />
             </group>
         </group>
-        <Environment map={assets.mapEnvHDR} background={assets.mapBackground instanceof Texture} blur={1} />
+        <Environment map={assets.mapEnvHDR} background={assets.mapBackground instanceof Texture} blur={0.5} />
     </>
 }

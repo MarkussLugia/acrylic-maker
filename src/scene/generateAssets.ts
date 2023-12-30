@@ -17,7 +17,7 @@ import {
 
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
-import { imageFileToPath, fileToDataURL } from "./imageToPath";
+import { fileToDataURL } from "./imageToPath";
 
 
 const textureLoader = new TextureLoader();
@@ -27,7 +27,7 @@ const mapEnvHDR = texRGBELoader.load('textures/hotel_room_1k.hdr', function () {
     mapEnvHDR.mapping = EquirectangularReflectionMapping;
 });
 
-const mapBackground = new Color("#ffffff")
+const mapBackground = new Color("#e3e3e3")
 
 export const cfgAcrylicTransmission = {
     transmissionSampler: false,
@@ -35,11 +35,11 @@ export const cfgAcrylicTransmission = {
     transmissionMap: mapEnvHDR,
     background: mapBackground,
     backside: true,
-    resolution: 600,// { value: 2048, min: 256, max: 2048, step: 256 },
+    resolution: 720,// { value: 2048, min: 256, max: 2048, step: 256 },
     transmission: 1,// { value: 1, min: 0, max: 1 },
     roughness: 0.02,// { value: 0.0, min: 0, max: 1, step: 0.01 },
     thickness: 0.02,// { value: 3.5, min: 0, max: 10, step: 0.01 },
-    ior: 1.8,// { value: 1.5, min: 1, max: 5, step: 0.01 },
+    ior: 2,// { value: 1.5, min: 1, max: 5, step: 0.01 },
     chromaticAberration: 0.75,// { value: 0.06, min: 0, max: 1 },
     anisotropy: 0.05,// { value: 0.1, min: 0, max: 1, step: 0.01 },
     distortion: 0.85,// { value: 0.0, min: 0, max: 1, step: 0.01 },
@@ -47,19 +47,19 @@ export const cfgAcrylicTransmission = {
     temporalDistortion: 0,// { value: 0.5, min: 0, max: 1, step: 0.01 },
     clearcoat: 1,// { value: 1, min: 0, max: 1 },
     envMap: mapEnvHDR,
-    envMapIntensity: 0.3,
-    reflectivity: 1,
-    attenuationDistance: 10,// { value: 0.5, min: 0, max: 10, step: 0.01 },
+    envMapIntensity: 0.6,
+    reflectivity: 0.9,
+    attenuationDistance: 0.02,// { value: 0.5, min: 0, max: 10, step: 0.01 },
     attenuationColor: '#ffffff',
-    color: 0xe0e0e0,
+    color: 0xefefef,
 }
 
 export const cfgAcrylicFront = {
     color: 0xffffff,
     transparent: true,
-    opacity: 0.05,
+    opacity: 0.01,
     // envMap: mapEnvHDR,
-    envMapIntensity: 0,
+    // envMapIntensity: 0,
     side: FrontSide,
     depthTest: false,
 };
@@ -74,16 +74,18 @@ export const cfgPrintDepth = {
     depthTest: false,
 };
 
-export async function imageToThreeAssets(imageFile: File):Promise<AssetsBundle> {
-    const basicSize = 300
-    const strokeSize = 13
+export async function generateAssets(rawData: SceneRawData): Promise<AssetsBundle> {
+    const { imageFile, basicSize, strokeSize, bezierPath } = rawData
+    // const basicSize = 300
+    // const strokeSize = 13
 
     const totalSize = basicSize + strokeSize * 2
 
     // create shape
     const shapeAcrylic = new Shape();
-    const { start, path } = await imageFileToPath(imageFile, basicSize, strokeSize)
-    console.log(Date.now(),"Path Ready");
+    const { start, path } = bezierPath
+    // const { start, path } = await imageFileToPath(imageFile, basicSize, strokeSize)
+    // console.log(Date.now(),"Path Ready");
     shapeAcrylic.moveTo(start[0] / totalSize - 0.5, start[1] / -totalSize + 0.5)
     for (const directive of path) {
         const { cp1x, cp1y, cp2x, cp2y, x, y } = directive
@@ -111,10 +113,10 @@ export async function imageToThreeAssets(imageFile: File):Promise<AssetsBundle> 
         // flatShading:true,
         side: DoubleSide,
         envMap: mapEnvHDR,
-        envMapIntensity: 0.5,
+        envMapIntensity: 0.6,
         // precision: "highp",
         // dithering: true,
-        // toneMapped: true,
+        toneMapped: true,
         // depthTest: false,
     };
 
@@ -138,7 +140,7 @@ export async function imageToThreeAssets(imageFile: File):Promise<AssetsBundle> 
         }
     );
 
-    console.log(Date.now(),"Assets Ready");
+    console.log(Date.now(), "Assets Ready");
     return {
         mapEnvHDR,
         mapBackground,
@@ -146,11 +148,11 @@ export async function imageToThreeAssets(imageFile: File):Promise<AssetsBundle> 
         shapeAcrylic,
 
         cfgPrintPlane,
-        matPrintPlane:new MeshPhysicalMaterial(cfgPrintPlane),
+        matPrintPlane: new MeshPhysicalMaterial(cfgPrintPlane),
         geoPrintPlane,
 
         cfgPrintDepth,
-        matPrintDepth:new MeshPhysicalMaterial(cfgPrintDepth),
+        matPrintDepth: new MeshPhysicalMaterial(cfgPrintDepth),
         geoPrintDepth,
 
         cfgAcrylicTransmission,
