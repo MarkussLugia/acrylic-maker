@@ -17,7 +17,7 @@ import {
 
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
-import { fileToDataURL } from "./imageToPath";
+import { fileToDataURL, urlToReadyImage } from "./imageToPath";
 
 
 const textureLoader = new TextureLoader();
@@ -78,6 +78,10 @@ export async function generateAssets(rawData: SceneRawData): Promise<AssetsBundl
     const { imageFile, basicSize, strokeSize, bezierPath } = rawData
     // const basicSize = 300
     // const strokeSize = 13
+    const fileData = await fileToDataURL(imageFile)
+    const fileImage = await urlToReadyImage(fileData)
+    const { naturalWidth, naturalHeight } = fileImage
+    const longerSide = naturalWidth > naturalHeight ? naturalWidth : naturalHeight
 
     const totalSize = basicSize + strokeSize * 2
 
@@ -121,7 +125,7 @@ export async function generateAssets(rawData: SceneRawData): Promise<AssetsBundl
     };
 
     // create print plane
-    const geoPrintPlane = new PlaneGeometry(basicSize / totalSize, basicSize / totalSize)
+    const geoPrintPlane = new PlaneGeometry((naturalWidth / longerSide) * basicSize / totalSize, (naturalHeight / longerSide) * basicSize / totalSize)
 
     const geoAcrylic = new ExtrudeGeometry(shapeAcrylic,
         {

@@ -6,7 +6,6 @@ import { fileToDataURL, imageFileToPath, urlToReadyImage } from './scene/imageTo
 // import { DefaultLoadingManager } from 'three'
 import { saveCanvas } from './saveCanvas';
 import { SceneReadyContext } from './ReactContextBus';
-import bgTransparentGrid from '@/assets/bg-grid.svg'
 
 declare global {
   interface BezierDirective {
@@ -81,13 +80,17 @@ export function App() {
     if (currentState == 1) {
       setTimeout(() => {
         setCurrentState(2)
-      }, 200);
+      }, 240);
     }
   }
 
 
   const fileSelector = useRef(null)
-  function inputFile() {
+  function selectFile() {
+    //@ts-ignore
+    fileSelector.current!.click()
+  }
+  function createRawData() {
     const inputEl = fileSelector.current! as HTMLInputElement
     console.log(Date.now(), "file loaded");
     if (inputEl.files) {
@@ -116,6 +119,11 @@ export function App() {
     setCurrentState(1)
   }
 
+  function goBack() {
+    setCurrentState(0)
+    createRawData()
+  }
+
   return (
     <>
       <div className="container">
@@ -131,17 +139,40 @@ export function App() {
           </SceneReadyContext.Provider>
         </div>
         <div className='config-area'>
-          <div className='file-selector'>
-            <input type="file" accept='image/*' ref={fileSelector} onChange={() => inputFile()} />
-          </div>
-          <div onClick={captureCanvasImage}>拍摄</div>
-          <div onClick={startProcess}>开始</div>
+          <input style={{ display: 'none' }} type="file" accept='image/*' ref={fileSelector} onChange={createRawData} />
+
+          {(currentState == 0 || currentState == 1) && <div className='config-image'>
+            <div className='config-title'>预览模式</div>
+            {/* <div className='config-subtitle'>选取图片，并按需调整设置。</div>
+            <div className='config-subtitle'>就绪后，点按按钮来查看模型。</div> */}
+
+          </div>}
+          {(currentState == 2) && <div className='config-three'>
+            <div className='config-title'>正在查看3D模型。</div>
+            <div className='config-subtitle'>想要旋转模型，请在显示区域点按并划动。</div>
+          </div>}
         </div>
         <div className='control-area'>
+          {(currentState == 0 || currentState == 1) && <div className='control-flex'>
+            <div 
+            className={`control ${sceneData ? "nogrow" : "grow"} pick`} 
+            onClick={selectFile}
+            >{sceneData ? "更换图片" : "选取图片"}</div>
+            {(currentState == 0 && sceneData) && <div className='control grow generate' onClick={startProcess}>
+              生成亚克力模型
+            </div>}
+            {(currentState == 1) && <div className='control grow generating'>
+              正在生成...
+            </div>}
+          </div>}
+          {(currentState == 2) && <div className='control-flex'>
+            <div className='control nogrow pick' onClick={goBack}>返回</div>
+            <div className='control grow generate' onClick={captureCanvasImage}>拍摄并保存图片</div>
+          </div>}
         </div>
         <div className='bottom-area'>
           <div>©2023 MarkussLugia / Siltra</div>
-          <div><a href="">GitHub</a></div>
+          <div><a href="https://github.com/MarkussLugia/acrylic-maker" target='_blank'>GitHub</a></div>
         </div>
       </div>
     </>
@@ -159,7 +190,7 @@ function ImgPreviewWrapper({ hidden, children }: { hidden: boolean, children: JS
         style={{ height: "100%", opacity: 0 }}
       />
       <div className='preview-wrapper-grid-bg'
-        style={{ backgroundImage: `url(${bgTransparentGrid})`, backgroundColor: "rgba(0,0,0,0.1)" }}
+        style={{ backgroundImage: `url(img/bg-grid.svg)`, backgroundColor: "rgba(0,0,0,0.1)" }}
       ></div>
       <div className='preview-content'>
         {children}
@@ -170,7 +201,7 @@ function ImgPreviewWrapper({ hidden, children }: { hidden: boolean, children: JS
 
 
 function ImgPreview({ data }: { data: SceneRawData }) {
-  const { imageFile, basicSize, strokeSize, bezierPath } = data
+  const { imageFile, basicSize, strokeSize } = data
   const fullSize = basicSize + strokeSize * 2
   const imagePercentage = 100 * basicSize / fullSize
   const offsetPercentage = 100 * strokeSize / fullSize
@@ -186,6 +217,8 @@ function ImgPreview({ data }: { data: SceneRawData }) {
 
     fileToDataURL(imageFile).then(res => {
       urlToReadyImage(res).then(fileImage => {
+        imageCanvas.width = imageCanvas.width
+        strokeCanvas.width = strokeCanvas.width
         const { width, height } = imageCanvas
         const context = imageCanvas.getContext("2d") as CanvasRenderingContext2D
         const { naturalWidth, naturalHeight } = fileImage
@@ -197,8 +230,8 @@ function ImgPreview({ data }: { data: SceneRawData }) {
         context.drawImage(fileImage, left, top, drawWidth, drawHeight)
 
         const scaleRatio = width / fullSize
-        const { start, path } = bezierPath
         const pathContext = strokeCanvas.getContext("2d") as CanvasRenderingContext2D
+        const { start, path } = data.bezierPath
         pathContext.lineWidth = 16
         pathContext.moveTo(start[0] * scaleRatio, start[1] * scaleRatio)
         for (let index = 0; index < path.length; index++) {
@@ -206,11 +239,14 @@ function ImgPreview({ data }: { data: SceneRawData }) {
           const { cp1x, cp1y, cp2x, cp2y, x, y } = direction
           pathContext.bezierCurveTo(cp1x * scaleRatio, cp1y * scaleRatio, cp2x * scaleRatio, cp2y * scaleRatio, x * scaleRatio, y * scaleRatio)
         }
+        console.log(path.length);
+
         pathContext.closePath()
         pathContext.strokeStyle = "#b0b0b0"
         pathContext.stroke()
         pathContext.fillStyle = "#989898"
         pathContext.fill()
+        // pathContext.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height)
       })
     })
   }, [data])

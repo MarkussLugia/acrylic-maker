@@ -10,7 +10,12 @@
   justify-content: flex-start;
   margin: 0 auto;
   background-color: #1e2022;
+  color: #c9d6df;
+}
+
+a {
   color: #f0f5f9;
+  text-decoration: none;
 }
 
 @media (max-width: 480px) {
@@ -20,23 +25,23 @@
 }
 
 #canvas-container {
-  width: calc(100% - 40px);
+  width: calc(100% - 36px);
   height: 440px;
   flex-grow: 0;
   flex-shrink: 0;
   position: relative;
-  margin: 20px;
+  margin: 18px;
   transition: all 300ms ease-out 0ms;
   box-sizing: border-box;
-  border-radius: 25px;
+  border-radius: 20px;
   overflow: hidden;
   background: linear-gradient(to top, #eee 0%, #ddd 20%, #aaa 40%, #999 100%);
 }
 
 @media (max-width: 480px) {
   #canvas-container {
-    width: calc(100vw - 40px);
-    height: calc(100vw - 40px);
+    width: calc(100vw - 36px);
+    height: calc(100vw - 36px);
   }
 }
 
@@ -52,7 +57,7 @@
   left: 0;
   top: 0;
   z-index: 5;
-  transition: width 500ms ease-in;
+  transition: width 500ms ease-in-out;
   width: 100%;
   height: 100%;
 }
@@ -106,17 +111,80 @@
 
 .config-area {
   flex-grow: 1;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 6px 18px;
+}
+
+.config-title {
+  font-size: 24px;
+  margin: 0 0 4px 0;
+}
+
+.config-subtitle {
+  font-size: 18px;
+  margin: 2px 0;
 }
 
 .control-area {
   flex-grow: 0;
   flex-shrink: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.control-flex {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 6px 16px;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: stretch
+}
+
+.control {
+  text-align: center;
+  box-sizing: border-box;
+  border-radius: 50px;
+  border: 1px solid #52616b;
+  background-color: #52616b;
+  line-height: 36px;
+  user-select: none;
+  letter-spacing: 1px;
+}
+
+.control.grow {
+  flex-grow: 1;
+}
+
+.control.nogrow {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 120px;
+  margin-right: 8px;
+  border: 1px solid #c9d6df;
+  background-color: transparent;
+}
+
+.control.pick {
+  border: 1px solid #c9d6df;
+  background-color: transparent;
+}
+
+.control.generating {
+  opacity: 0.5;
 }
 
 .bottom-area {
   width: 100%;
   box-sizing: border-box;
-  padding: 2px 16px;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  padding: 16px;
   flex-grow: 0;
   flex-shrink: 0;
   display: flex;
